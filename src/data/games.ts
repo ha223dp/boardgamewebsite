@@ -10,7 +10,7 @@ export const boardGames: Game[] = [
     difficulty: 3,
     learningCurve: 2,
     category: ['Strategy', 'Trading', 'Family'],
-    image: 'https://images.pexels.com/photos/4691567/pexels-photo-4691567.jpeg?auto=compress&cs=tinysrgb&w=800',
+    image: 'src/data/catan.avif',
     youtubeUrl: 'https://www.youtube.com/watch?v=o3WJf6UBdzw',
     manualUrl: 'https://www.catan.com/sites/default/files/2021-06/catan_base_rules_2020_200408.pdf',
     rating: 4.5
