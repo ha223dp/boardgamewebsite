@@ -1,3 +1,19 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Game image styling - fixed size */
+.game-image {
+  width: 400px;
+  height: 400px;
+  object-fit: cover;
+  max-width: 100%;
+}
+
+/* Alternative: If you want to target all images in game cards */
+.game-card img {
+  width: 400px;
+  height: 400px;
+  object-fit: cover;
+  max-width: 100%;
+}

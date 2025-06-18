@@ -20,30 +20,8 @@ const GameCard: React.FC<GameCardProps> = ({ game, onGameClick }) => {
     return 'Hard';
   };
 
-  const handleCardClick = (e: React.MouseEvent) => {
-    // Prevent card click when clicking on buttons/links
-    if ((e.target as HTMLElement).closest('a, button')) {
-      return;
-    }
-    onGameClick(game);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      onGameClick(game);
-    }
-  };
-
   return (
-    <div 
-      className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border-4 border-amber-200 overflow-hidden group game-card cursor-pointer"
-      onClick={handleCardClick}
-      onKeyDown={handleKeyDown}
-      tabIndex={0}
-      role="button"
-      aria-label={`View details for ${game.name}`}
-    >
+    <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border-4 border-amber-200 overflow-hidden group game-card">
       <div className="relative">
         <img
           src={game.image}
@@ -60,7 +38,10 @@ const GameCard: React.FC<GameCardProps> = ({ game, onGameClick }) => {
 
       <div className="p-6">
         <div className="flex items-start justify-between mb-3">
-          <h3 className="text-xl font-bold text-amber-900 transition-colors">
+          <h3 
+            className="text-xl font-bold text-amber-900 cursor-pointer hover:text-amber-700 transition-colors"
+            onClick={() => onGameClick(game)}
+          >
             {game.name}
           </h3>
           <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
@@ -113,7 +94,6 @@ const GameCard: React.FC<GameCardProps> = ({ game, onGameClick }) => {
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center space-x-1 bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex-1 justify-center"
-            onClick={(e) => e.stopPropagation()}
           >
             <Youtube size={16} />
             <span>Watch</span>
@@ -123,7 +103,6 @@ const GameCard: React.FC<GameCardProps> = ({ game, onGameClick }) => {
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center space-x-1 bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex-1 justify-center"
-            onClick={(e) => e.stopPropagation()}
           >
             <FileText size={16} />
             <span>Rules</span>

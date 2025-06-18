@@ -24,7 +24,7 @@ export const boardGames: Game[] = [
     difficulty: 1,
     learningCurve: 1,
     category: ['Party', 'Humor', 'Adult'],
-    image: 'https://images.pexels.com/photos/4792720/pexels-photo-4792720.jpeg?auto=compress&cs=tinysrgb&w=800',
+    image: 'src/data/cardsagainsthumanity.webp',
     youtubeUrl: 'https://www.youtube.com/watch?v=QCEqUn7If44',
     manualUrl: 'https://s3.amazonaws.com/cah/CAH_Rules.pdf',
     rating: 4.2
@@ -38,7 +38,7 @@ export const boardGames: Game[] = [
     difficulty: 3,
     learningCurve: 3,
     category: ['Strategy', 'Engine Building', 'Nature'],
-    image: 'https://images.pexels.com/photos/3972755/pexels-photo-3972755.jpeg?auto=compress&cs=tinysrgb&w=800',
+    image: 'src/data/wingspan.jpeg',
     youtubeUrl: 'https://www.youtube.com/watch?v=lgDgcLI2B0U',
     manualUrl: 'https://stonemaiergames.com/games/wingspan/rules/',
     rating: 4.7
@@ -52,7 +52,7 @@ export const boardGames: Game[] = [
     difficulty: 2,
     learningCurve: 2,
     category: ['Strategy', 'Route Building', 'Family'],
-    image: 'https://images.pexels.com/photos/163064/play-stone-network-networked-interactive-163064.jpeg?auto=compress&cs=tinysrgb&w=800',
+    image: 'src/data/TicketToRide.webp',
     youtubeUrl: 'https://www.youtube.com/watch?v=qHmf1bau9xQ',
     manualUrl: 'https://ncdn0.daysofwonder.com/tickettoride/en/img/tt_rules_2015_en.pdf',
     rating: 4.4
@@ -66,9 +66,9 @@ export const boardGames: Game[] = [
     difficulty: 2,
     learningCurve: 2,
     category: ['Strategy', 'Tile Placement', 'Abstract'],
-    image: 'https://images.pexels.com/photos/1040157/pexels-photo-1040157.jpeg?auto=compress&cs=tinysrgb&w=800',
-    youtubeUrl: 'https://www.youtube.com/watch?v=csOZy9SMS3s',
-    manualUrl: 'https://www.planbgames.com/en/news/azul-rules-pdf',
+    image: 'src/data/azul.jpg',
+    youtubeUrl: 'https://www.youtube.com/watch?v=193R2h2M3Yk&ab_channel=TripleSGames',
+    manualUrl: 'https://tesera.ru/images/items/1108676/EN-Azul-Rules.pdf',
     rating: 4.6
   },
   {
