@@ -10,7 +10,7 @@ export const boardGames: Game[] = [
     difficulty: 3,
     learningCurve: 2,
     category: ['Strategy', 'Trading', 'Family'],
-    image: 'src/data/catan.avif',
+    image: 'src/data/pictures/catan.avif',
     youtubeUrl: 'https://www.youtube.com/watch?v=o3WJf6UBdzw',
     manualUrl: 'https://www.catan.com/sites/default/files/2021-06/catan_base_rules_2020_200408.pdf',
     rating: 4.5
@@ -24,7 +24,7 @@ export const boardGames: Game[] = [
     difficulty: 1,
     learningCurve: 1,
     category: ['Party', 'Humor', 'Adult'],
-    image: 'src/data/cardsagainsthumanity.webp',
+    image: 'src/data/pictures/cardsagainsthumanity.webp',
     youtubeUrl: 'https://www.youtube.com/watch?v=QCEqUn7If44',
     manualUrl: 'https://s3.amazonaws.com/cah/CAH_Rules.pdf',
     rating: 4.2
@@ -38,7 +38,7 @@ export const boardGames: Game[] = [
     difficulty: 3,
     learningCurve: 3,
     category: ['Strategy', 'Engine Building', 'Nature'],
-    image: 'src/data/wingspan.jpeg',
+    image: 'src/data/pictures/wingspan.jpeg',
     youtubeUrl: 'https://www.youtube.com/watch?v=lgDgcLI2B0U',
     manualUrl: 'https://stonemaiergames.com/games/wingspan/rules/',
     rating: 4.7
@@ -52,7 +52,7 @@ export const boardGames: Game[] = [
     difficulty: 2,
     learningCurve: 2,
     category: ['Strategy', 'Route Building', 'Family'],
-    image: 'src/data/TicketToRide.webp',
+    image: 'src/data/pictures/TicketToRide.webp',
     youtubeUrl: 'https://www.youtube.com/watch?v=qHmf1bau9xQ',
     manualUrl: 'https://ncdn0.daysofwonder.com/tickettoride/en/img/tt_rules_2015_en.pdf',
     rating: 4.4
@@ -66,7 +66,7 @@ export const boardGames: Game[] = [
     difficulty: 2,
     learningCurve: 2,
     category: ['Strategy', 'Tile Placement', 'Abstract'],
-    image: 'src/data/azul.jpg',
+    image: 'src/data/pictures/azul.jpg',
     youtubeUrl: 'https://www.youtube.com/watch?v=193R2h2M3Yk&ab_channel=TripleSGames',
     manualUrl: 'https://tesera.ru/images/items/1108676/EN-Azul-Rules.pdf',
     rating: 4.6
@@ -80,9 +80,9 @@ export const boardGames: Game[] = [
     difficulty: 3,
     learningCurve: 3,
     category: ['Cooperative', 'Strategy', 'Medical'],
-    image: 'https://images.pexels.com/photos/5699475/pexels-photo-5699475.jpeg?auto=compress&cs=tinysrgb&w=800',
-    youtubeUrl: 'https://www.youtube.com/watch?v=ytK1zWeiHzY',
-    manualUrl: 'https://zmangames.com/en/games/pandemic/',
+    image: 'src/data/pictures/pandemic.webp',
+    youtubeUrl: 'https://www.youtube.com/watch?v=63Ha1ktxvoY&ab_channel=Geek%26Sundry',
+    manualUrl: 'https://cdn.svc.asmodee.net/production-zman/uploads/2024/09/Pandemic_Rulebook.pdf',
     rating: 4.3
   },
   {
@@ -94,8 +94,8 @@ export const boardGames: Game[] = [
     difficulty: 1,
     learningCurve: 1,
     category: ['Party', 'Adult Humor', 'Social'],
-    image: 'https://images.pexels.com/photos/3621104/pexels-photo-3621104.jpeg?auto=compress&cs=tinysrgb&w=800',
-    youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    image: 'src/data/pictures/distuberedFriends.webp',
+    youtubeUrl: 'https://www.youtube.com/watch?v=tMrZVG2hQz8&ab_channel=HighlyRecommendedProducts',
     manualUrl: 'https://www.disturbedfriends.com/',
     rating: 4.1
   },
@@ -108,8 +108,8 @@ export const boardGames: Game[] = [
     difficulty: 1,
     learningCurve: 1,
     category: ['Party', 'Adult Humor', 'Creative'],
-    image: 'https://images.pexels.com/photos/4792080/pexels-photo-4792080.jpeg?auto=compress&cs=tinysrgb&w=800',
-    youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    image: 'src/data/pictures/JokingHazard.webp',
+    youtubeUrl: 'https://www.youtube.com/watch?v=VHquyO11uSM&ab_channel=RundliiGaming',
     manualUrl: 'https://www.kickstarter.com/projects/explosm/joking-hazard',
     rating: 4.2
   },
@@ -122,8 +122,8 @@ export const boardGames: Game[] = [
     difficulty: 2,
     learningCurve: 1,
     category: ['Party', 'Word Game', 'Social'],
-    image: 'https://images.pexels.com/photos/4792072/pexels-photo-4792072.jpeg?auto=compress&cs=tinysrgb&w=800',
-    youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    image: 'src/data/pictures/incoherent.jpg',
+    youtubeUrl: 'https://www.youtube.com/watch?v=psFtfrNSWvM&ab_channel=PsyCatGames',
     manualUrl: 'https://www.whatdoyoumeme.com/products/incohearent',
     rating: 3.9
   },
@@ -136,7 +136,7 @@ export const boardGames: Game[] = [
     difficulty: 2,
     learningCurve: 2,
     category: ['Family', 'Racing', 'Betting'],
-    image: 'https://images.pexels.com/photos/8111764/pexels-photo-8111764.jpeg?auto=compress&cs=tinysrgb&w=800',
+    image: 'src/data/pictures/camelup.jpg',
     youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
     manualUrl: 'https://www.zmangames.com/en/games/camel-up-second-edition/',
     rating: 4.0
