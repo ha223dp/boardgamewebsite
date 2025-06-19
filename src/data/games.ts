@@ -137,8 +137,8 @@ export const boardGames: Game[] = [
     learningCurve: 2,
     category: ['Family', 'Racing', 'Betting'],
     image: 'src/data/pictures/camelup.jpg',
-    youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    manualUrl: 'https://www.zmangames.com/en/games/camel-up-second-edition/',
+    youtubeUrl: 'https://www.youtube.com/watch?v=ylpy5i7_w5s&t=78s&ab_channel=TheCasualGamers',
+    manualUrl: 'https://cdn.1j1ju.com/medias/8b/c6/82-camel-up-rulebook.pdf',
     rating: 4.0
   },
   {
@@ -150,9 +150,9 @@ export const boardGames: Game[] = [
     difficulty: 2,
     learningCurve: 2,
     category: ['Dexterity', 'Construction', 'Abstract'],
-    image: 'https://images.pexels.com/photos/2882507/pexels-photo-2882507.jpeg?auto=compress&cs=tinysrgb&w=800',
-    youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    manualUrl: 'https://iello.fr/en/fiche/tokyo-highway',
+    image: 'src/data/pictures/tokyohighway.webp',
+    youtubeUrl: 'https://www.youtube.com/watch?v=lBokX76WH_Q',
+    manualUrl: 'https://www.itten-games.com/wp-content/uploads/2019/02/TOKYO_HIGHWAY_rule_en.pdf',
     rating: 4.2
   },
   {
@@ -164,9 +164,9 @@ export const boardGames: Game[] = [
     difficulty: 4,
     learningCurve: 4,
     category: ['Strategy', 'Engine Building', 'Science Fiction'],
-    image: 'https://images.pexels.com/photos/2159065/pexels-photo-2159065.jpeg?auto=compress&cs=tinysrgb&w=800',
+    image: 'src/data/pictures/terraformingMars.avif',
     youtubeUrl: 'https://www.youtube.com/watch?v=n3yVpsiVwL8',
-    manualUrl: 'https://www.strongholdgames.com/store/board-games/terraforming-mars/',
+    manualUrl: 'https://cdn.1j1ju.com/medias/13/3f/fb-terraforming-mars-rule.pdf',
     rating: 4.5
   },
   {
