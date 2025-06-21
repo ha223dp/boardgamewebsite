@@ -178,9 +178,9 @@ export const boardGames: Game[] = [
     difficulty: 2,
     learningCurve: 2,
     category: ['Strategy', 'Engine Building', 'Economic'],
-    image: 'https://images.pexels.com/photos/1319460/pexels-photo-1319460.jpeg?auto=compress&cs=tinysrgb&w=800',
-    youtubeUrl: 'https://www.youtube.com/watch?v=sNHh4dGp_hs',
-    manualUrl: 'https://www.spacecowboys.fr/splendor',
+    image: 'src/data/pictures/splendor.webp',
+    youtubeUrl: 'https://www.youtube.com/watch?v=6Rk4nKEYrhY&ab_channel=GamePoint',
+    manualUrl: 'https://cdn.1j1ju.com/medias/7f/91/ba-splendor-rulebook.pdf',
     rating: 4.1
   },
   {
