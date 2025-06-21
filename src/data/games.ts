@@ -192,9 +192,9 @@ export const boardGames: Game[] = [
     difficulty: 1,
     learningCurve: 1,
     category: ['Party', 'Social Media', 'Humor'],
-    image: 'https://images.pexels.com/photos/4792080/pexels-photo-4792080.jpeg?auto=compress&cs=tinysrgb&w=800',
-    youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    manualUrl: 'https://www.whatdoyoumeme.com/',
+    image: 'src/data/pictures/whatdoyoumeme.webp',
+    youtubeUrl: 'https://www.youtube.com/watch?v=UaWOmfuzcTY&ab_channel=TripleSGames',
+    manualUrl: 'https://cdn.1j1ju.com/medias/e9/94/bd-what-do-you-meme-rulebook.pdf',
     rating: 3.8
   },
   {
