@@ -118,7 +118,7 @@ function App() {
 </h1>
             <p className="text-xl text-amber-800 max-w-3xl mx-auto leading-relaxed mb-8">
               Discover your next favorite board game adventure. From strategic masterpieces to party favorites, 
-              find the perfect game for every occasion and every group.
+              find the perfect game for every occasion and every group size.
             </p>
             
             {/* Integrated Search Bar */}
