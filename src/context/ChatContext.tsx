@@ -2,14 +2,16 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ChatMessage, Game } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 import { useGameContext } from './GameContext';
-import { Link } from 'react-router-dom';
+import.meta.env.VITE_OPENAI_API_KEY
 
 interface ChatContextType {
   messages: ChatMessage[];
-  sendMessage: (text: string) => void;
+  sendMessage: (text: string) => Promise<void>;
   clearChat: () => void;
   isChatOpen: boolean;
   toggleChat: () => void;
+  isTyping: boolean;
+  error: string | null;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -17,12 +19,14 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { games } = useGameContext();
   
   useEffect(() => {
     const welcomeMessage: ChatMessage = {
       id: uuidv4(),
-      text: "Hello! I'm your board game assistant. Tell me what kind of games you enjoy or how many players you have, and I'll recommend some games for you!",
+      text: "Hello! I'm your AI-powered board game assistant. I can help you find the perfect games based on your preferences, group size, available time, and interests. What kind of gaming experience are you looking for?",
       isUser: false,
       timestamp: new Date()
     };
@@ -36,116 +40,112 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const clearChat = () => {
     const welcomeMessage: ChatMessage = {
       id: uuidv4(),
-      text: "Chat cleared! How can I help you find your next favorite game?",
+      text: "Chat cleared! I'm ready to help you discover your next favorite board game. What would you like to play?",
       isUser: false,
       timestamp: new Date()
     };
     setMessages([welcomeMessage]);
+    setError(null);
   };
 
-  const generateResponse = (userMessage: string): string => {
-    userMessage = userMessage.toLowerCase();
-    
-    const playerCountMatch = userMessage.match(/(\d+)\s*(player|people|person|friend)/);
-    let playerCount: number | null = null;
-    if (playerCountMatch) {
-      playerCount = parseInt(playerCountMatch[1], 10);
-    }
-    
-    const timeMatch = userMessage.match(/(\d+)\s*(minute|hour|min)/);
-    let maxTime: number | null = null;
-    if (timeMatch) {
-      let time = parseInt(timeMatch[1], 10);
-      if (timeMatch[2].includes('hour')) {
-        time *= 60;
-      }
-      maxTime = time;
-    }
-    
-    let difficulty: number | null = null;
-    if (userMessage.includes('easy') || userMessage.includes('simple') || userMessage.includes('beginner')) {
-      difficulty = 2;
-    } else if (userMessage.includes('medium') || userMessage.includes('moderate')) {
-      difficulty = 3;
-    } else if (userMessage.includes('hard') || userMessage.includes('difficult') || userMessage.includes('complex')) {
-      difficulty = 4;
-    }
-    
-    const categories = [];
-    if (userMessage.includes('strategy') || userMessage.includes('strategic')) {
-      categories.push('strategy');
-    }
-    if (userMessage.includes('family') || userMessage.includes('kid') || userMessage.includes('children')) {
-      categories.push('family');
-    }
-    if (userMessage.includes('party') || userMessage.includes('fun') || userMessage.includes('laugh')) {
-      categories.push('party');
-    }
-    if (userMessage.includes('card') || userMessage.includes('cards')) {
-      categories.push('card');
-    }
-    if (userMessage.includes('cooperative') || userMessage.includes('coop') || userMessage.includes('together')) {
-      categories.push('cooperative');
-    }
-    if (userMessage.includes('competitive') || userMessage.includes('versus') || userMessage.includes('against')) {
-      categories.push('competitive');
-    }
-    
-    let filteredGames = [...games];
-    
-    if (playerCount) {
-      filteredGames = filteredGames.filter(game => 
-        game.minPlayers <= playerCount! && game.maxPlayers >= playerCount!
-      );
-    }
-    
-    if (maxTime) {
-      filteredGames = filteredGames.filter(game => game.playTime <= maxTime!);
-    }
-    
-    if (difficulty) {
-      filteredGames = filteredGames.filter(game => game.difficulty <= difficulty!);
-    }
-    
-    if (categories.length > 0) {
-      filteredGames = filteredGames.filter(game => 
-        categories.some(category => game.category.includes(category as any))
-      );
-    }
-    
-    if (filteredGames.length > 0) {
-      const recommendations = filteredGames.slice(0, 3);
-      
-      let response = "Based on what you're looking for, I recommend:\n\n";
-      recommendations.forEach((game, index) => {
-        response += `${index + 1}. **${game.name}** - ${game.description.substring(0, 100)}...\n`;
-        response += `   Players: ${game.minPlayers}-${game.maxPlayers}, Time: ${game.playTime} min, Difficulty: ${game.difficulty}/5\n`;
-        if (game.funFact) {
-          response += `   Fun Fact: ${game.funFact}\n`;
-        }
-        response += `   Learn more: /game/${game.id}\n\n`;
+  const callOpenAI = async (userMessage: string, conversationHistory: ChatMessage[]): Promise<string> => {
+    try {
+      // Create system prompt with game data
+      const systemPrompt = `You are an expert board game recommendation assistant with extensive knowledge of board games. You have access to a curated collection of games:
+
+${JSON.stringify(games, null, 2)}
+
+Your expertise includes:
+- Recommending games based on player count, time constraints, complexity preferences, and themes
+- Explaining game mechanics and what makes each game special
+- Comparing games and helping users choose between options
+- Providing context about why certain games work well for specific situations
+- Being enthusiastic and knowledgeable about the hobby
+
+Guidelines:
+1. Always be helpful, enthusiastic, and knowledgeable
+2. When recommending specific games from the collection, mention the game name clearly
+3. Explain WHY you're recommending each game
+4. Consider the user's specific constraints (time, players, complexity, etc.)
+5. Feel free to ask clarifying questions to give better recommendations
+6. Keep responses conversational and engaging
+7. If asked about games not in your collection, provide general advice but focus on games you have data for
+
+Be the kind of board game expert that makes people excited to try new games!`;
+
+      // Prepare conversation history (keep last 8 messages for context)
+      const contextMessages = [
+        { role: 'system', content: systemPrompt },
+        ...conversationHistory.slice(-8).map(msg => ({
+          role: msg.isUser ? 'user' : 'assistant',
+          content: msg.text
+        })),
+        { role: 'user', content: userMessage }
+      ];
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.VITE_OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-3.5-turbo',
+          messages: contextMessages,
+          max_tokens: 400,
+          temperature: 0.8,
+          presence_penalty: 0.2,
+          frequency_penalty: 0.1,
+        }),
       });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Authentication failed. Please check your OpenAI API key.');
+        } else if (response.status === 429) {
+          throw new Error('Too many requests. Please wait a moment and try again.');
+        } else if (response.status === 500) {
+          throw new Error('OpenAI service is temporarily unavailable. Please try again.');
+        } else {
+          throw new Error(`API request failed with status ${response.status}`);
+        }
+      }
+
+      const data = await response.json();
       
-      if (filteredGames.length > 3) {
-        response += `I found ${filteredGames.length} games that match your criteria. Check out the game list to see more!`;
+      if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+        throw new Error('Invalid response format from OpenAI');
+      }
+
+      return data.choices[0].message.content.trim();
+    } catch (error) {
+      console.error('OpenAI API Error:', error);
+      
+      if (error instanceof Error) {
+        throw error;
       }
       
-      return response;
+      throw new Error('Failed to connect to AI service. Please try again.');
     }
-    
-    if (userMessage.includes('recommend') || userMessage.includes('suggest')) {
-      return "I'd be happy to recommend a game! Could you tell me more about what you're looking for? How many players will be playing? Do you prefer easy or complex games? Are you looking for strategy, party games, or something else?";
-    }
-    
-    if (userMessage.includes('hello') || userMessage.includes('hi') || userMessage.includes('hey')) {
-      return "Hi there! I'm your board game assistant. Tell me what kind of games you enjoy, how many players you have, or how much time you want to spend, and I'll recommend some great games for you!";
-    }
-    
-    return "I'm not sure I understand what you're looking for. Could you tell me more about what kind of game you want to play? How many players do you have? How much time do you want to spend? Do you prefer easy or complex games?";
   };
 
-  const sendMessage = (text: string) => {
-    if (!text.trim()) return;
+  const getFallbackResponse = (userMessage: string): string => {
+    const message = userMessage.toLowerCase();
+    
+    // Simple fallback logic when AI is unavailable
+    if (message.includes('strategy')) {
+      return "I'm having trouble connecting to my AI brain, but I can suggest some great strategy games: Ticket to Ride for beginners, Azul for medium complexity, or Wingspan for nature lovers!";
+    } else if (message.includes('party') || message.includes('fun')) {
+      return "While I reconnect to my AI, here are some party favorites: Codenames for word games, Telestrations for laughs, or Just One for creativity!";
+    } else if (message.includes('family')) {
+      return "My AI is taking a break, but these family games are always winners: Splendor, King of Tokyo, or Sushi Go!";
+    } else {
+      return "I'm having trouble with my AI connection right now. Could you try asking again, or let me know if you'd like recommendations for strategy games, party games, or family games?";
+    }
+  };
+
+  const sendMessage = async (text: string): Promise<void> => {
+    if (!text.trim() || isTyping) return;
     
     const userMessage: ChatMessage = {
       id: uuidv4(),
@@ -155,17 +155,42 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
     
     setMessages(prev => [...prev, userMessage]);
+    setIsTyping(true);
+    setError(null);
     
-    setTimeout(() => {
+    try {
+      // Check if API key is configured
+      if (!import.meta.env.VITE_OPENAI_API_KEY) {
+        throw new Error('OpenAI API key not configured. Please add VITE_OPENAI_API_KEY to your environment variables.');
+      }
+
+      const aiResponse = await callOpenAI(text, messages);
+      
       const botResponse: ChatMessage = {
         id: uuidv4(),
-        text: generateResponse(text),
+        text: aiResponse,
         isUser: false,
         timestamp: new Date()
       };
       
       setMessages(prev => [...prev, botResponse]);
-    }, 1000);
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Something went wrong';
+      setError(errorMessage);
+      
+      // Provide fallback response
+      const fallbackResponse: ChatMessage = {
+        id: uuidv4(),
+        text: getFallbackResponse(text),
+        isUser: false,
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, fallbackResponse]);
+    } finally {
+      setIsTyping(false);
+    }
   };
 
   return (
@@ -174,7 +199,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       sendMessage,
       clearChat,
       isChatOpen,
-      toggleChat
+      toggleChat,
+      isTyping,
+      error
     }}>
       {children}
     </ChatContext.Provider>

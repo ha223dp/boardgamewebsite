@@ -1,6 +1,7 @@
 import React from 'react';
 import { Clock, Users, Star, ExternalLink, FileText, Youtube } from 'lucide-react';
 import { Game } from '../types/Game';
+import.meta.env.VITE_OPENAI_API_KEY
 
 interface GameCardProps {
   game: Game;
@@ -63,9 +64,7 @@ const GameCard: React.FC<GameCardProps> = ({ game, onGameClick }) => {
           <h3 className="text-xl font-bold text-amber-900 transition-colors">
             {game.name}
           </h3>
-          <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
-            {game.yearPublished}
-          </span>
+        
         </div>
 
         <p className="text-gray-700 text-sm mb-4 line-clamp-3">{game.description}</p>
@@ -131,7 +130,6 @@ const GameCard: React.FC<GameCardProps> = ({ game, onGameClick }) => {
         </div>
 
         <div className="mt-3 text-xs text-gray-500 text-center">
-          <span>{game.whereToGet}</span>
         </div>
       </div>
     </div>

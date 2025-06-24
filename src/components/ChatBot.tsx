@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Send, Bot, User, ExternalLink } from 'lucide-react';
+import { X, Send, Bot, User, ExternalLink, AlertCircle } from 'lucide-react';
 import { ChatMessage, Game } from '../types/Game';
 import { boardGames } from '../data/games';
 
@@ -13,13 +13,14 @@ const ChatBot: React.FC<ChatBotProps> = ({ isVisible, onClose, onGameSelect }) =
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
-      text: "Hello! I'm your Game Guru 🎲 I can help you find the perfect board game based on your preferences. What kind of gaming experience are you looking for today?",
+      text: "Hello! I'm your AI-powered Game Guru! I can help you find the perfect board game based on your preferences, group size, time constraints, and more. What kind of gaming experience are you looking for today?",
       isUser: false,
       timestamp: new Date()
     }
   ]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -30,52 +31,92 @@ const ChatBot: React.FC<ChatBotProps> = ({ isVisible, onClose, onGameSelect }) =
     scrollToBottom();
   }, [messages]);
 
-  const getGameRecommendations = (userMessage: string): { text: string; games: Game[] } => {
-    const message = userMessage.toLowerCase();
-    let recommendedGames: Game[] = [];
-    let responseText = '';
+  const callOpenAI = async (userMessage: string, conversationHistory: ChatMessage[]): Promise<string> => {
+    try {
+      // Prepare conversation context for OpenAI
+      const systemPrompt = `You are an expert board game recommendation assistant. You have access to a curated collection of board games with the following data:
 
-    if (message.includes('party') || message.includes('funny') || message.includes('humor')) {
-      recommendedGames = boardGames.filter(game => 
-        game.category.includes('Party') || game.category.includes('Humor')
-      );
-      responseText = "Perfect! For party games that guarantee laughs, I recommend:";
-    } else if (message.includes('strategy') || message.includes('complex') || message.includes('thinking')) {
-      recommendedGames = boardGames.filter(game => 
-        game.category.includes('Strategy') && game.difficulty >= 3
-      );
-      responseText = "Excellent choice! For strategic games that challenge your mind, I suggest:";
-    } else if (message.includes('family') || message.includes('kids') || message.includes('children')) {
-      recommendedGames = boardGames.filter(game => 
-        game.category.includes('Family') || game.difficulty <= 2
-      );
-      responseText = "Great for family time! These games are perfect for all ages:";
-    } else if (message.includes('quick') || message.includes('short') || message.includes('30')) {
-      recommendedGames = boardGames.filter(game => 
-        game.playTime.includes('30') || game.playTime.includes('45')
-      );
-      responseText = "Perfect for shorter gaming sessions! These games are quick but engaging:";
-    } else if (message.includes('cooperative') || message.includes('together') || message.includes('team')) {
-      recommendedGames = boardGames.filter(game => 
-        game.category.includes('Cooperative')
-      );
-      responseText = "Love working together! These cooperative games are fantastic:";
-    } else if (message.includes('two') || message.includes('2 player') || message.includes('couple')) {
-      recommendedGames = boardGames.filter(game => 
-        game.players.includes('2')
-      );
-      responseText = "Perfect for two! These games are excellent for couples or pairs:";
-    } else {
-      // Default recommendations
-      recommendedGames = boardGames.slice(0, 3);
-      responseText = "Based on popular choices, here are some excellent games to consider:";
+${JSON.stringify(boardGames, null, 2)}
+
+Your role is to:
+1. Recommend games based on user preferences (player count, time, complexity, theme, etc.)
+2. Explain WHY each game fits their criteria
+3. Provide helpful details about gameplay, mechanics, and what makes each game special
+4. Be conversational and enthusiastic about board games
+5. When recommending games, format your response to include the game ID so users can click to learn more
+
+When mentioning a specific game from the collection, use this format: [GAME:game_id] at the end of each game recommendation so the interface can make it clickable.
+
+Be helpful, knowledgeable, and passionate about board games!`;
+
+      // Convert conversation history to OpenAI format
+      const messages = [
+        { role: 'system', content: systemPrompt },
+        ...conversationHistory.slice(-6).map(msg => ({
+          role: msg.isUser ? 'user' : 'assistant',
+          content: msg.text
+        })),
+        { role: 'user', content: userMessage }
+      ];
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.VITE_OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-3.5-turbo',
+          messages: messages,
+          max_tokens: 500,
+          temperature: 0.7,
+          presence_penalty: 0.1,
+          frequency_penalty: 0.1,
+        }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Invalid API key. Please check your OpenAI API key.');
+        } else if (response.status === 429) {
+          throw new Error('API rate limit exceeded. Please try again in a moment.');
+        } else {
+          throw new Error(`API error: ${response.status}`);
+        }
+      }
+
+      const data = await response.json();
+      return data.choices[0].message.content;
+    } catch (error) {
+      console.error('OpenAI API Error:', error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Failed to get AI response. Please try again.');
+    }
+  };
+
+  const parseGameRecommendations = (text: string): { cleanText: string; gameIds: string[] } => {
+    const gameRegex = /\[GAME:([^\]]+)\]/g;
+    const gameIds: string[] = [];
+    let match;
+
+    while ((match = gameRegex.exec(text)) !== null) {
+      gameIds.push(match[1]);
     }
 
-    return { text: responseText, games: recommendedGames.slice(0, 3) };
+    const cleanText = text.replace(gameRegex, '').trim();
+    return { cleanText, gameIds };
   };
 
   const handleSendMessage = async () => {
-    if (!inputText.trim()) return;
+    if (!inputText.trim() || isTyping) return;
+
+    // Check if API key is configured
+    if (!import.meta.env.VITE_OPENAI_API_KEY) {
+      setError('OpenAI API key not configured. Please add VITE_OPENAI_API_KEY to your environment variables.');
+      return;
+    }
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -87,36 +128,53 @@ const ChatBot: React.FC<ChatBotProps> = ({ isVisible, onClose, onGameSelect }) =
     setMessages(prev => [...prev, userMessage]);
     setInputText('');
     setIsTyping(true);
+    setError(null);
 
-    // Simulate typing delay
-    setTimeout(() => {
-      const { text, games } = getGameRecommendations(inputText);
-      
+    try {
+      const aiResponse = await callOpenAI(inputText, messages);
+      const { cleanText, gameIds } = parseGameRecommendations(aiResponse);
+
       const botResponse: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        text: text,
+        text: cleanText,
         isUser: false,
         timestamp: new Date()
       };
 
       setMessages(prev => [...prev, botResponse]);
 
-      // Add game recommendations
-      games.forEach((game, index) => {
-        setTimeout(() => {
-          const gameMessage: ChatMessage = {
-            id: (Date.now() + index + 10).toString(),
-            text: `🎯 **${game.name}** - ${game.description.slice(0, 100)}... Click to learn more!`,
-            isUser: false,
-            timestamp: new Date(),
-            gameLink: game.id
-          };
-          setMessages(prev => [...prev, gameMessage]);
-        }, (index + 1) * 500);
+      // Add clickable game cards for recommended games
+      gameIds.forEach((gameId, index) => {
+        const game = boardGames.find(g => g.id === gameId);
+        if (game) {
+          setTimeout(() => {
+            const gameMessage: ChatMessage = {
+              id: (Date.now() + index + 10).toString(),
+              text: `🎯 **${game.name}** (${game.players} players, ${game.playTime}, Difficulty: ${game.difficulty}/5)\n${game.description.slice(0, 120)}...`,
+              isUser: false,
+              timestamp: new Date(),
+              gameLink: game.id
+            };
+            setMessages(prev => [...prev, gameMessage]);
+          }, (index + 1) * 300);
+        }
       });
 
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Something went wrong. Please try again.';
+      setError(errorMessage);
+      
+      // Add fallback response
+      const fallbackResponse: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        text: "I'm having trouble connecting to my AI brain right now. Let me give you some popular recommendations while I recover: Ticket to Ride for families, Azul for strategy lovers, and Codenames for parties!",
+        isUser: false,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, fallbackResponse]);
+    } finally {
       setIsTyping(false);
-    }, 1000);
+    }
   };
 
   const handleGameClick = (gameId: string) => {
@@ -126,6 +184,8 @@ const ChatBot: React.FC<ChatBotProps> = ({ isVisible, onClose, onGameSelect }) =
       onClose();
     }
   };
+
+  const clearError = () => setError(null);
 
   if (!isVisible) return null;
 
@@ -138,8 +198,8 @@ const ChatBot: React.FC<ChatBotProps> = ({ isVisible, onClose, onGameSelect }) =
               <Bot size={20} />
             </div>
             <div>
-              <h3 className="font-bold">Game Guru</h3>
-              <p className="text-xs opacity-80">Your board game assistant</p>
+              <h3 className="font-bold">AI Game Guru</h3>
+              <p className="text-xs opacity-80">Powered by OpenAI</p>
             </div>
           </div>
           <button
@@ -150,14 +210,29 @@ const ChatBot: React.FC<ChatBotProps> = ({ isVisible, onClose, onGameSelect }) =
           </button>
         </div>
 
+        {error && (
+          <div className="mx-4 mt-2 p-3 bg-red-100 border border-red-300 rounded-lg flex items-start space-x-2">
+            <AlertCircle size={16} className="text-red-500 mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm text-red-700">{error}</p>
+              <button
+                onClick={clearError}
+                className="text-xs text-red-600 hover:text-red-800 underline mt-1"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.map((message) => (
             <div
               key={message.id}
               className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
             >
-              <div className={`flex items-start space-x-2 max-w-[80%] ${message.isUser ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+              <div className={`flex items-start space-x-2 max-w-[85%] ${message.isUser ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                   message.isUser ? 'bg-blue-500' : 'bg-green-500'
                 }`}>
                   {message.isUser ? <User size={16} className="text-white" /> : <Bot size={16} className="text-white" />}
@@ -165,15 +240,15 @@ const ChatBot: React.FC<ChatBotProps> = ({ isVisible, onClose, onGameSelect }) =
                 <div className={`p-3 rounded-xl ${
                   message.isUser 
                     ? 'bg-blue-500 text-white rounded-br-sm' 
-                    : 'bg-white border-2 border-green-100 text-gray-800 rounded-bl-sm'
+                    : 'bg-white border-2 border-green-100 text-gray-800 rounded-bl-sm shadow-sm'
                 }`}>
-                  <p className="text-sm whitespace-pre-wrap">{message.text}</p>
+                  <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.text}</p>
                   {message.gameLink && (
                     <button
                       onClick={() => handleGameClick(message.gameLink!)}
-                      className="mt-2 flex items-center space-x-1 text-green-600 hover:text-green-700 text-xs font-medium"
+                      className="mt-2 flex items-center space-x-1 text-green-600 hover:text-green-700 text-xs font-medium hover:bg-green-50 px-2 py-1 rounded transition-colors"
                     >
-                      <span>View Game</span>
+                      <span>View Game Details</span>
                       <ExternalLink size={12} />
                     </button>
                   )}
@@ -188,7 +263,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ isVisible, onClose, onGameSelect }) =
                 <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
                   <Bot size={16} className="text-white" />
                 </div>
-                <div className="bg-white border-2 border-green-100 p-3 rounded-xl rounded-bl-sm">
+                <div className="bg-white border-2 border-green-100 p-3 rounded-xl rounded-bl-sm shadow-sm">
                   <div className="flex space-x-1">
                     <div className="w-2 h-2 bg-green-400 rounded-full animate-bounce"></div>
                     <div className="w-2 h-2 bg-green-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
@@ -209,7 +284,8 @@ const ChatBot: React.FC<ChatBotProps> = ({ isVisible, onClose, onGameSelect }) =
               onChange={(e) => setInputText(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
               placeholder="Ask me about board games..."
-              className="flex-1 p-3 border-2 border-green-200 rounded-lg focus:border-green-400 focus:outline-none bg-white/80"
+              className="flex-1 p-3 border-2 border-green-200 rounded-lg focus:border-green-400 focus:outline-none bg-white/80 text-sm"
+              disabled={isTyping}
             />
             <button
               onClick={handleSendMessage}
@@ -219,6 +295,9 @@ const ChatBot: React.FC<ChatBotProps> = ({ isVisible, onClose, onGameSelect }) =
               <Send size={20} />
             </button>
           </div>
+          <p className="text-xs text-gray-500 mt-2 text-center">
+            Powered by OpenAI • Be specific for better recommendations!
+          </p>
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, Users, Clock, Star, Calendar, User, ExternalLink, Youtube, FileText } from 'lucide-react';
 import { Game } from '../types/Game';
+import.meta.env.VITE_OPENAI_API_KEY
 
 interface GameDetailProps {
   game: Game | null;
@@ -61,14 +62,7 @@ const GameDetail: React.FC<GameDetailProps> = ({ game, isVisible, onClose }) => 
             <div>
               <h1 className="text-3xl font-bold text-amber-900 font-serif mb-2">{game.name}</h1>
               <p className="text-gray-600 flex items-center space-x-4">
-                <span className="flex items-center space-x-1">
-                  <User size={16} />
-                  <span>{game.designer}</span>
-                </span>
-                <span className="flex items-center space-x-1">
-                  <Calendar size={16} />
-                  <span>{game.yearPublished}</span>
-                </span>
+                
               </p>
             </div>
           </div>
@@ -126,9 +120,7 @@ const GameDetail: React.FC<GameDetailProps> = ({ game, isVisible, onClose }) => 
 
           <div className="mb-6">
             <h2 className="text-xl font-bold text-amber-900 mb-3">Where to Get It</h2>
-            <p className="text-gray-700 bg-white/60 p-3 rounded-lg border-2 border-amber-100">
-              {game.whereToGet}
-            </p>
+            
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4">

@@ -52,8 +52,7 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
       const results = boardGames.filter(game =>
         game.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         game.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        game.category.some(cat => cat.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        game.designer.toLowerCase().includes(searchTerm.toLowerCase())
+        game.category.some(cat => cat.toLowerCase().includes(searchTerm.toLowerCase())) 
       );
 
       setSearchResults(results);
