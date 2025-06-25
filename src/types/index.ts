@@ -29,6 +29,10 @@ export type GameCategory =
   | 'rpg'
   | 'dice'
   | 'adventure'
+  | 'card game'
+  | 'action'
+  | 'social media'
+  | 'humor'
   | 'mystery';
 
 export interface ChatMessage {
