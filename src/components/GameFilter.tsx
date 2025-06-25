@@ -17,6 +17,17 @@ const categoryOptions: { value: GameCategory; label: string }[] = [
   { value: 'humor', label: 'Humor' },
   { value: 'card game', label: 'Card game' },
 { value: 'social media', label: 'Social media' },
+{ value: 'classic', label: 'Classic' },
+{ value: 'deduction', label: 'Deduction' },
+{ value: 'drawing', label: 'Drawing' },
+{ value: 'dice Rolling', label: 'Dice Rolling' },
+{ value: 'betrayal', label: 'Betrayal' },
+{ value: 'horror', label: 'Horror' },
+{ value: 'exploration', label: 'Exploration' },
+{ value: 'dungeon Crawler', label: 'Dungeon Crawler' },
+
+
+
 ];
 
 const GameFilter: React.FC = () => {

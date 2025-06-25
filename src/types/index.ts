@@ -34,6 +34,14 @@ export type GameCategory =
   | 'social media'
   | 'humor'
   | 'mystery';
+  | 'classic';
+  | 'deduction';
+  | 'drawing';
+  | 'dice Rolling';
+  | 'betrayal';
+  | 'horror';
+  | 'exploration';
+  | 'dungeon Crawler';
 
 export interface ChatMessage {
   id: string;
