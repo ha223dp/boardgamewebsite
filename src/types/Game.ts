@@ -10,7 +10,6 @@ export interface Game {
   image: string;
   youtubeUrl: string;
   manualUrl: string;
-  
   rating: number;
   
 }

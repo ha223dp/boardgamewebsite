@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ChatMessage, Game } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 import { useGameContext } from './GameContext';
-import.meta.env.VITE_OPENAI_API_KEY
 
 interface ChatContextType {
   messages: ChatMessage[];
@@ -50,6 +49,13 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const callOpenAI = async (userMessage: string, conversationHistory: ChatMessage[]): Promise<string> => {
     try {
+      // Use import.meta.env for Vite projects
+      const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+      
+      if (!apiKey) {
+        throw new Error('OpenAI API key not found in environment variables');
+      }
+
       // Create system prompt with game data
       const systemPrompt = `You are an expert board game recommendation assistant with extensive knowledge of board games. You have access to a curated collection of games:
 
@@ -86,7 +92,7 @@ Be the kind of board game expert that makes people excited to try new games!`;
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${process.env.VITE_OPENAI_API_KEY}`,
+          'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({

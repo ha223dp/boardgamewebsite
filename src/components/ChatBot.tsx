@@ -21,6 +21,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ isVisible, onClose, onGameSelect }) =
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastRequestTime, setLastRequestTime] = useState<number>(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -31,8 +32,44 @@ const ChatBot: React.FC<ChatBotProps> = ({ isVisible, onClose, onGameSelect }) =
     scrollToBottom();
   }, [messages]);
 
+  const findGamesByName = (text: string): Game[] => {
+    const foundGames: Game[] = [];
+    const usedGameIds = new Set<string>();
+    
+    // Look for exact game name matches (case insensitive)
+    boardGames.forEach(game => {
+      const gameName = game.name.toLowerCase();
+      const textLower = text.toLowerCase();
+      
+      // Check for exact name match or if the game name appears as a complete word
+      const nameRegex = new RegExp(`\\b${gameName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+      
+      if (nameRegex.test(textLower) && !usedGameIds.has(game.id)) {
+        foundGames.push(game);
+        usedGameIds.add(game.id);
+      }
+    });
+
+    return foundGames;
+  };
+
   const callOpenAI = async (userMessage: string, conversationHistory: ChatMessage[]): Promise<string> => {
     try {
+      // Use import.meta.env for Vite projects
+      const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+      
+      // Debug logging
+      console.log('API Key exists:', !!apiKey);
+      console.log('API Key prefix:', apiKey?.substring(0, 7));
+      
+      if (!apiKey) {
+        throw new Error('OpenAI API key not found in environment variables');
+      }
+      
+      if (!apiKey.startsWith('sk-')) {
+        throw new Error('Invalid OpenAI API key format. Key should start with "sk-"');
+      }
+
       // Prepare conversation context for OpenAI
       const systemPrompt = `You are an expert board game recommendation assistant. You have access to a curated collection of board games with the following data:
 
@@ -43,9 +80,9 @@ Your role is to:
 2. Explain WHY each game fits their criteria
 3. Provide helpful details about gameplay, mechanics, and what makes each game special
 4. Be conversational and enthusiastic about board games
-5. When recommending games, format your response to include the game ID so users can click to learn more
+5. When recommending games, mention their exact names clearly so users can learn more
 
-When mentioning a specific game from the collection, use this format: [GAME:game_id] at the end of each game recommendation so the interface can make it clickable.
+IMPORTANT: When mentioning specific games from the collection, use their EXACT names as they appear in the data. This helps users identify and learn more about the games.
 
 Be helpful, knowledgeable, and passionate about board games!`;
 
@@ -62,7 +99,7 @@ Be helpful, knowledgeable, and passionate about board games!`;
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${process.env.VITE_OPENAI_API_KEY}`,
+          'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -79,7 +116,11 @@ Be helpful, knowledgeable, and passionate about board games!`;
         if (response.status === 401) {
           throw new Error('Invalid API key. Please check your OpenAI API key.');
         } else if (response.status === 429) {
-          throw new Error('API rate limit exceeded. Please try again in a moment.');
+          throw new Error('Rate limit reached. Please wait 60 seconds before trying again.');
+        } else if (response.status === 402) {
+          throw new Error('OpenAI account has insufficient credits. Please check your billing.');
+        } else if (response.status >= 500) {
+          throw new Error('OpenAI servers are experiencing issues. Please try again later.');
         } else {
           throw new Error(`API error: ${response.status}`);
         }
@@ -94,19 +135,6 @@ Be helpful, knowledgeable, and passionate about board games!`;
       }
       throw new Error('Failed to get AI response. Please try again.');
     }
-  };
-
-  const parseGameRecommendations = (text: string): { cleanText: string; gameIds: string[] } => {
-    const gameRegex = /\[GAME:([^\]]+)\]/g;
-    const gameIds: string[] = [];
-    let match;
-
-    while ((match = gameRegex.exec(text)) !== null) {
-      gameIds.push(match[1]);
-    }
-
-    const cleanText = text.replace(gameRegex, '').trim();
-    return { cleanText, gameIds };
   };
 
   const handleSendMessage = async () => {
@@ -132,32 +160,31 @@ Be helpful, knowledgeable, and passionate about board games!`;
 
     try {
       const aiResponse = await callOpenAI(inputText, messages);
-      const { cleanText, gameIds } = parseGameRecommendations(aiResponse);
 
       const botResponse: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        text: cleanText,
+        text: aiResponse,
         isUser: false,
         timestamp: new Date()
       };
 
       setMessages(prev => [...prev, botResponse]);
 
-      // Add clickable game cards for recommended games
-      gameIds.forEach((gameId, index) => {
-        const game = boardGames.find(g => g.id === gameId);
-        if (game) {
-          setTimeout(() => {
-            const gameMessage: ChatMessage = {
-              id: (Date.now() + index + 10).toString(),
-              text: `🎯 **${game.name}** (${game.players} players, ${game.playTime}, Difficulty: ${game.difficulty}/5)\n${game.description.slice(0, 120)}...`,
-              isUser: false,
-              timestamp: new Date(),
-              gameLink: game.id
-            };
-            setMessages(prev => [...prev, gameMessage]);
-          }, (index + 1) * 300);
-        }
+      // Find games mentioned in the AI response and add clickable cards
+      const mentionedGames = findGamesByName(aiResponse);
+      
+      // Add game cards for mentioned games (with a slight delay for better UX)
+      mentionedGames.forEach((game, index) => {
+        setTimeout(() => {
+          const gameMessage: ChatMessage = {
+            id: `game-${Date.now()}-${index}`,
+            text: `🎯 **${game.name}** (${game.players} players, ${game.playTime}, Difficulty: ${game.difficulty}/5)\n${game.description.slice(0, 120)}...`,
+            isUser: false,
+            timestamp: new Date(),
+            gameLink: game.id
+          };
+          setMessages(prev => [...prev, gameMessage]);
+        }, (index + 1) * 300);
       });
 
     } catch (error) {
